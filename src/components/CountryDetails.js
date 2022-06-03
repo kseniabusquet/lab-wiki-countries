@@ -1,35 +1,72 @@
+import axios from "axios"
 import { useParams, Link } from "react-router-dom"
-import { useEffect, useState } from "react"
-
 
 function CountryDetails(props) {
     const {countries} = props
-    const { id } = useParams()
-    const [country, setCountry] = useState(null)
+    let {id} = useParams()
 
-    useEffect(() => {
-        const foundCountry = countries.find( (country) => {
-            return country.alpha3Code === id; 
+    //if id is undefined, render ABW
+    /*
+    if (typeof id === 'undefined'){
+        id = 'ABW'
+        }*/
+
+    id = id || countries[0].alpha3Code
+
+    const findCountry = async (alpha3Code) => {
+
+        //return countries.find(country => {
+         //return country.alpha3Code === alpha3Code
+      //})
+
+      
+      const res = await axios.get(`https://ih-countries-api.herokuapp.com/countries/${alpha3Code}`)
+        .then(response => {
+            country = response.data
         })
+        .catch(error => console.log(error))
 
-        if (foundCountry) setCountry(foundCountry)
-
-    }, [id, countries])
-
-    let URL = ""
-
-    if (country) {
-        let countryCode = country.alpha2Code.toLowerCase()
-        URL = `https://flagpedia.net/data/flags/icon/72x54/${countryCode}.png`
+        return country
     }
 
-    return(
-        <div>
-            <img src = {URL} alt = "country"/>
-            {country && country.alpha3Code}                
-        </div>
-    )
+    const country = findCountry(id)
 
+    return(
+        <div className="col-7">
+        <h1>{country.name.common}</h1>
+        <table className="table">
+          <thead></thead>
+          <tbody>
+            <tr>
+              <td style={{width:'30%'}}>Capital</td>
+              <td>{country.capital[0]}</td>
+            </tr>
+            <tr>
+              <td>Area</td>
+              <td>
+                {country.area} km
+                <sup>2</sup>
+              </td>
+            </tr>
+            <tr>
+              <td>Borders</td>
+              <td>
+                <ul>
+                    {
+                        country.borders.map (border => {
+                            const borderCountry = findCountry(border)
+                            return (
+                                <li key ={border}><Link to={`/${border}`}>{borderCountry.name.common}</Link></li>
+                            )
+                        })
+                    }
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    )
 }
 
 export default CountryDetails
