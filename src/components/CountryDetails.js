@@ -1,35 +1,38 @@
 import axios from "axios"
 import { useParams, Link } from "react-router-dom"
+import {useEffect, useState} from 'react'
+import {Plane} from 'react-loader-spinner'
 
 function CountryDetails(props) {
+
     const {countries} = props
     let {id} = useParams()
+    const [loading, setLoading] = useState(true)
+    const [country, setCountry] = useState({})
 
-    //if id is undefined, render ABW
-    /*
-    if (typeof id === 'undefined'){
-        id = 'ABW'
-        }*/
 
     id = id || countries[0].alpha3Code
 
-    const findCountry = async (alpha3Code) => {
+    useEffect(() => {
+      axios.get(`https://ih-countries-api.herokuapp.com/countries/${id}`)
+      .then(response => {
+          setCountry(response.data)
+          setLoading(false)
+      })
+      .catch(error => console.log(error))
+    }, [id])
 
-        //return countries.find(country => {
-         //return country.alpha3Code === alpha3Code
-      //})
+    const findCountry = (alpha3Code) => {
+        return countries.find(country => country.alpha3Code === alpha3Code)
+      }
 
-      
-      const res = await axios.get(`https://ih-countries-api.herokuapp.com/countries/${alpha3Code}`)
-        .then(response => {
-            country = response.data
-        })
-        .catch(error => console.log(error))
-
-        return country
+    if(loading) {
+      return (
+        <div className = 'col-7'>
+          <Plane />
+        </div>
+      )
     }
-
-    const country = findCountry(id)
 
     return(
         <div className="col-7">
